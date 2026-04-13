@@ -2,7 +2,6 @@ package ee.coop.coopbackend.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-
 import lombok.Data;
 
 @Data
@@ -39,5 +38,6 @@ public class LoanApplication {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    private String rejectionReason;
+    @Enumerated(EnumType.STRING)
+    private RejectionReason rejectionReason;
 }
