@@ -4,8 +4,10 @@ import ee.coop.coopbackend.dto.LoanApplicationRequest;
 import ee.coop.coopbackend.entity.LoanApplication;
 import ee.coop.coopbackend.entity.RejectionReason;
 import ee.coop.coopbackend.entity.Status;
+import ee.coop.coopbackend.mapper.LoanApplicationMapper;
 import ee.coop.coopbackend.repository.LoanApplicationRepository;
 import ee.coop.coopbackend.util.PersonalCodeUtils;
+import ee.coop.coopbackend.entity.PaymentSchedule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,58 +20,42 @@ public class LoanApplicationService {
 
     private final LoanApplicationRepository loanApplicationRepository;
     private final PaymentScheduleService paymentScheduleService;
+    private final LoanApplicationMapper loanApplicationMapper;
 
     @Value("${loan.max-age}")
     private int maxAge;
 
-    public LoanApplicationService(LoanApplicationRepository loanApplicationRepository, PaymentScheduleService paymentScheduleService) {
+    public LoanApplicationService(LoanApplicationRepository loanApplicationRepository,
+                                  PaymentScheduleService paymentScheduleService,
+                                  LoanApplicationMapper loanApplicationMapper) {
         this.loanApplicationRepository = loanApplicationRepository;
         this.paymentScheduleService = paymentScheduleService;
+        this.loanApplicationMapper = loanApplicationMapper;
     }
 
     public LoanApplication createApplication(LoanApplicationRequest request) {
-        LoanApplication loanApplication = new LoanApplication();
-        loanApplication.setFirstName(request.getFirstName());
-        loanApplication.setLastName(request.getLastName());
-        loanApplication.setPersonalCode(request.getPersonalCode());
-        loanApplication.setLoanPeriodMonths(request.getLoanPeriodMonths());
-        loanApplication.setInterestMargin(request.getInterestMargin());
-        loanApplication.setBaseInterestRate(request.getBaseInterestRate());
-        loanApplication.setLoanAmount(request.getLoanAmount());
+        LoanApplication loanApplication = loanApplicationMapper.toEntity(request);
 
         int age = calculateAge(loanApplication.getPersonalCode());
 
         if (age < 18) {
             loanApplication.setStatus(Status.REJECTED);
             loanApplication.setRejectionReason(RejectionReason.UNDERAGE);
-            return loanApplicationRepository.save(loanApplication);
         } else if (age > maxAge) {
             loanApplication.setStatus(Status.REJECTED);
             loanApplication.setRejectionReason(RejectionReason.CUSTOMER_TOO_OLD);
-            return loanApplicationRepository.save(loanApplication);
         } else if (loanApplication.getLoanAmount() > 5000 && age < 21) {
             loanApplication.setStatus(Status.REJECTED);
             loanApplication.setRejectionReason(RejectionReason.RISK_TOO_HIGH);
-            return loanApplicationRepository.save(loanApplication);
+        } else {
+            loanApplication.setStatus(Status.IN_REVIEW);
+            loanApplication.setRejectionReason(null);
+
+            List<PaymentSchedule> schedule = paymentScheduleService.generateSchedule(loanApplication);
+            loanApplication.setPaymentSchedules(schedule);
         }
-
-        loanApplication.setRejectionReason(null);
-        loanApplication.setStatus(Status.IN_REVIEW);
-
-        List<ee.coop.coopbackend.entity.PaymentSchedule> schedule =
-                paymentScheduleService.generateSchedule(loanApplication);
-        loanApplication.setPaymentSchedules(schedule);
 
         return loanApplicationRepository.save(loanApplication);
-    }
-
-    private int calculateAge(String personalCode) {
-        try {
-            LocalDate birthDate = PersonalCodeUtils.extractBirthDate(personalCode);
-            return Period.between(birthDate, LocalDate.now()).getYears();
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid personal code");
-        }
     }
 
     public List<LoanApplication> getAll() {
@@ -102,5 +88,14 @@ public class LoanApplicationService {
         loanApplication.setRejectionReason(rejectionReason);
 
         return loanApplicationRepository.save(loanApplication);
+    }
+
+    private int calculateAge(String personalCode) {
+        try {
+            LocalDate birthDate = PersonalCodeUtils.extractBirthDate(personalCode);
+            return Period.between(birthDate, LocalDate.now()).getYears();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid personal code");
+        }
     }
 }
