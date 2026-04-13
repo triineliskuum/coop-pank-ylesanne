@@ -2,9 +2,11 @@ package ee.coop.coopbackend.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 public class LoanApplication {
 
@@ -40,4 +42,7 @@ public class LoanApplication {
 
     @Enumerated(EnumType.STRING)
     private RejectionReason rejectionReason;
+
+    @OneToMany(mappedBy = "loanApplication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<PaymentSchedule> paymentSchedules = new java.util.ArrayList<>();
 }
