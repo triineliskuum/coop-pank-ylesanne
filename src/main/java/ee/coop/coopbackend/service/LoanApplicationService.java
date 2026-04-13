@@ -75,4 +75,32 @@ public class LoanApplicationService {
     public List<LoanApplication> getAll() {
         return loanApplicationRepository.findAll();
     }
+
+    public LoanApplication approveApplication(Long id) {
+        LoanApplication loanApplication = loanApplicationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Loan application not found"));
+
+        if (loanApplication.getStatus() != Status.IN_REVIEW) {
+            throw new IllegalArgumentException("Only IN_REVIEW applications can be approved");
+        }
+
+        loanApplication.setStatus(Status.APPROVED);
+        loanApplication.setRejectionReason(null);
+
+        return loanApplicationRepository.save(loanApplication);
+    }
+
+    public LoanApplication rejectApplication(Long id, RejectionReason rejectionReason) {
+        LoanApplication loanApplication = loanApplicationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Loan application not found"));
+
+        if (loanApplication.getStatus() != Status.IN_REVIEW) {
+            throw new IllegalArgumentException("Only IN_REVIEW applications can be rejected");
+        }
+
+        loanApplication.setStatus(Status.REJECTED);
+        loanApplication.setRejectionReason(rejectionReason);
+
+        return loanApplicationRepository.save(loanApplication);
+    }
 }

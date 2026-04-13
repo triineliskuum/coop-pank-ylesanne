@@ -3,5 +3,6 @@ package ee.coop.coopbackend.entity;
 public enum RejectionReason {
     CUSTOMER_TOO_OLD,
     UNDERAGE,
-    RISK_TOO_HIGH
+    RISK_TOO_HIGH,
+    MANUAL_REJECT
 }

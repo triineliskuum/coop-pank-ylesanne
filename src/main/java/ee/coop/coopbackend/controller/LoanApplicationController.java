@@ -5,6 +5,7 @@ import ee.coop.coopbackend.dto.LoanApplicationResponse;
 import ee.coop.coopbackend.dto.PaymentScheduleResponse;
 import ee.coop.coopbackend.entity.LoanApplication;
 import ee.coop.coopbackend.service.LoanApplicationService;
+import ee.coop.coopbackend.dto.RejectLoanRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +33,19 @@ public class LoanApplicationController {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    @PostMapping("/{id}/approve")
+    public LoanApplicationResponse approveLoanApplication(@PathVariable Long id) {
+        LoanApplication approved = loanApplicationService.approveApplication(id);
+        return mapToResponse(approved);
+    }
+
+    @PostMapping("/{id}/reject")
+    public LoanApplicationResponse rejectLoanApplication(@PathVariable Long id,
+                                                         @Valid @RequestBody RejectLoanRequest request) {
+        LoanApplication rejected = loanApplicationService.rejectApplication(id, request.getRejectionReason());
+        return mapToResponse(rejected);
     }
 
     private LoanApplicationResponse mapToResponse(LoanApplication loanApplication) {
