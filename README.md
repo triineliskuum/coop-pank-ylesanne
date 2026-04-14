@@ -5,7 +5,7 @@ It was built as part of a Coop Pank internship assignment.
 
 ---
 
-##
+## Overview
 
 The system allows:
 - Submitting loan applications
@@ -16,7 +16,7 @@ The system allows:
 
 ---
 
-##
+## Tech Stack
 
 - Java 21
 - Spring Boot 3
@@ -66,12 +66,12 @@ Review process
 
 ## Business Logic
 
-Validation rules
+### Validation rules
 - Personal code must follow Estonian format
 - Loan amount must be at least 5000 €
 - Loan period: 6–360 months
 
-Decision logic
+### Decision logic
 
 Application is automatically rejected if:
 - Applicant is under 18 → UNDERAGE
