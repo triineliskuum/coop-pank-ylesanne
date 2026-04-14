@@ -200,4 +200,106 @@ class LoanApplicationServiceTest {
         assertEquals("Only IN_REVIEW applications can be rejected", ex.getMessage());
         verify(loanApplicationRepository, never()).save(any());
     }
+
+    @Test
+    void createApplication_shouldAllowExactly18YearsOld() {
+        LoanApplicationRequest request = new LoanApplicationRequest();
+        request.setPersonalCode("50801010000");
+
+        LoanApplication mapped = new LoanApplication();
+        mapped.setPersonalCode(request.getPersonalCode());
+        mapped.setLoanAmount(5000);
+        mapped.setLoanPeriodMonths(12);
+
+        when(loanApplicationMapper.toEntity(request)).thenReturn(mapped);
+        when(paymentScheduleService.generateSchedule(any())).thenReturn(List.of(new PaymentSchedule()));
+        when(loanApplicationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        LoanApplication result = loanApplicationService.createApplication(request);
+
+        assertEquals(Status.IN_REVIEW, result.getStatus());
+    }
+
+    @Test
+    void createApplication_shouldAllowExactlyMaxAge() {
+        LoanApplicationRequest request = new LoanApplicationRequest();
+        request.setPersonalCode("35601010000");
+
+        LoanApplication mapped = new LoanApplication();
+        mapped.setPersonalCode(request.getPersonalCode());
+        mapped.setLoanAmount(3000);
+        mapped.setLoanPeriodMonths(12);
+
+        when(loanApplicationMapper.toEntity(request)).thenReturn(mapped);
+        when(paymentScheduleService.generateSchedule(any())).thenReturn(List.of(new PaymentSchedule()));
+        when(loanApplicationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        LoanApplication result = loanApplicationService.createApplication(request);
+
+        assertEquals(Status.IN_REVIEW, result.getStatus());
+    }
+
+    @Test
+    void createApplication_shouldThrowExceptionForInvalidPersonalCode() {
+        LoanApplicationRequest request = new LoanApplicationRequest();
+        request.setPersonalCode("123");
+
+        LoanApplication mapped = new LoanApplication();
+        mapped.setPersonalCode(request.getPersonalCode());
+
+        when(loanApplicationMapper.toEntity(request)).thenReturn(mapped);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> loanApplicationService.createApplication(request));
+    }
+
+    @Test
+    void createApplication_shouldSaveApplication() {
+        LoanApplicationRequest request = new LoanApplicationRequest();
+        request.setPersonalCode("49403136526");
+
+        LoanApplication mapped = new LoanApplication();
+        mapped.setPersonalCode(request.getPersonalCode());
+        mapped.setLoanAmount(4000);
+        mapped.setLoanPeriodMonths(12);
+
+        when(loanApplicationMapper.toEntity(request)).thenReturn(mapped);
+        when(paymentScheduleService.generateSchedule(any())).thenReturn(List.of(new PaymentSchedule()));
+        when(loanApplicationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        loanApplicationService.createApplication(request);
+
+        verify(loanApplicationRepository).save(any(LoanApplication.class));
+    }
+
+    @Test
+    void createApplication_shouldAttachPaymentSchedule() {
+        LoanApplicationRequest request = new LoanApplicationRequest();
+        request.setPersonalCode("49403136526");
+
+        LoanApplication mapped = new LoanApplication();
+        mapped.setPersonalCode(request.getPersonalCode());
+        mapped.setLoanAmount(4000);
+        mapped.setLoanPeriodMonths(12);
+
+        PaymentSchedule ps = new PaymentSchedule();
+        ps.setPaymentNumber(1);
+
+        when(loanApplicationMapper.toEntity(request)).thenReturn(mapped);
+        when(paymentScheduleService.generateSchedule(any())).thenReturn(List.of(ps));
+        when(loanApplicationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        LoanApplication result = loanApplicationService.createApplication(request);
+
+        assertNotNull(result.getPaymentSchedules());
+        assertEquals(1, result.getPaymentSchedules().size());
+    }
+
+    @Test
+    void approveApplication_shouldThrowIfNotFound() {
+        when(loanApplicationRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> loanApplicationService.approveApplication(1L));
+    }
 }
