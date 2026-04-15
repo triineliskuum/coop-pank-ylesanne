@@ -7,9 +7,13 @@ import ee.coop.coopbackend.entity.LoanApplication;
 import ee.coop.coopbackend.entity.PaymentSchedule;
 import org.springframework.stereotype.Component;
 
+/**
+ * Mapper class for converting between DTOs and entities.
+ */
 @Component
 public class LoanApplicationMapper {
 
+    // Converts request DTO to entity
     public LoanApplication toEntity(LoanApplicationRequest request) {
         LoanApplication loanApplication = new LoanApplication();
         loanApplication.setFirstName(request.getFirstName());
@@ -22,6 +26,7 @@ public class LoanApplicationMapper {
         return loanApplication;
     }
 
+    // Converts entity to response DTO
     public LoanApplicationResponse toResponse(LoanApplication loanApplication) {
         LoanApplicationResponse response = new LoanApplicationResponse();
         response.setId(loanApplication.getId());

@@ -2,8 +2,15 @@ package ee.coop.coopbackend.util;
 
 import java.time.LocalDate;
 
+/**
+ * Utility class for extracting data from Estonian personal codes.
+ */
 public class PersonalCodeUtils {
 
+    /**
+     * Extracts birth date from Estonian personal code.
+     * Validates format and determines correct century.
+     */
     public static LocalDate extractBirthDate(String personalCode) {
         if (personalCode == null || personalCode.length() != 11 || !personalCode.matches("\\d{11}")) {
             throw new IllegalArgumentException("Personal code must contain exactly 11 digits");

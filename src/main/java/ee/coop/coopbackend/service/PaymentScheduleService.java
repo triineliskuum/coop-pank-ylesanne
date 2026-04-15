@@ -9,15 +9,23 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service responsible for generating annuity-based payment schedules.
+ */
 @Service
 public class PaymentScheduleService {
 
+    /**
+     * Generates a monthly annuity payment schedule.
+     * Calculates principal, interest and remaining balance for each month.
+     */
     public List<PaymentSchedule> generateSchedule(LoanApplication loanApplication) {
         List<PaymentSchedule> schedule = new ArrayList<>();
 
         double principal = loanApplication.getLoanAmount();
         int months = loanApplication.getLoanPeriodMonths();
         double annualRate = loanApplication.getInterestMargin() + loanApplication.getBaseInterestRate();
+        // Calculate monthly annuity payment using standard formula
         double monthlyRate = annualRate / 100.0 / 12.0;
 
         LocalDate firstPaymentDate = LocalDate.now();
@@ -33,6 +41,7 @@ public class PaymentScheduleService {
         monthlyPayment = round(monthlyPayment);
 
         for (int i = 1; i <= months; i++) {
+            // Calculate interest and principal portions for each payment
             double interestPart = round(remainingBalance * monthlyRate);
             double principalPart = round(monthlyPayment - interestPart);
 

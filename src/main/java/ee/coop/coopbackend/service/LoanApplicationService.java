@@ -15,6 +15,10 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 
+/**
+ * Service responsible for handling loan application logic.
+ * Includes validation, decision making and payment schedule generation.
+ */
 @Service
 public class LoanApplicationService {
 
@@ -33,24 +37,34 @@ public class LoanApplicationService {
         this.loanApplicationMapper = loanApplicationMapper;
     }
 
+    /**
+     * Creates a new loan application based on request data.
+     * Applies business rules and generates payment schedule if application is valid.
+     */
     public LoanApplication createApplication(LoanApplicationRequest request) {
         LoanApplication loanApplication = loanApplicationMapper.toEntity(request);
 
+        // Calculate applicant age from personal code
         int age = calculateAge(loanApplication.getPersonalCode());
 
+        // Reject if applicant is under legal age
         if (age < 18) {
             loanApplication.setStatus(Status.REJECTED);
             loanApplication.setRejectionReason(RejectionReason.UNDERAGE);
-        } else if (age > maxAge) {
+        } // Reject if applicant exceeds maximum allowed age
+        else if (age > maxAge) {
             loanApplication.setStatus(Status.REJECTED);
             loanApplication.setRejectionReason(RejectionReason.CUSTOMER_TOO_OLD);
-        } else if (loanApplication.getLoanAmount() > 5000 && age < 21) {
+        } // Reject if risk is too high (young applicant + large loan)
+        else if (loanApplication.getLoanAmount() > 5000 && age < 21) {
             loanApplication.setStatus(Status.REJECTED);
             loanApplication.setRejectionReason(RejectionReason.RISK_TOO_HIGH);
-        } else {
+        } // Otherwise application is valid and goes to review
+        else {
             loanApplication.setStatus(Status.IN_REVIEW);
             loanApplication.setRejectionReason(null);
 
+            // Generate annuity-based payment schedule for valid applications
             List<PaymentSchedule> schedule = paymentScheduleService.generateSchedule(loanApplication);
             loanApplication.setPaymentSchedules(schedule);
         }

@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for handling loan application endpoints.
+ */
 @RestController
 @RequestMapping("/loans")
 public class LoanApplicationController {
@@ -24,12 +27,18 @@ public class LoanApplicationController {
         this.loanApplicationMapper = loanApplicationMapper;
     }
 
+    /**
+     * Creates a new loan application.
+     */
     @PostMapping
     public LoanApplicationResponse createLoanApplication(@Valid @RequestBody LoanApplicationRequest request) {
         LoanApplication saved = loanApplicationService.createApplication(request);
         return loanApplicationMapper.toResponse(saved);
     }
 
+    /**
+     * Returns all loan applications.
+     */
     @GetMapping
     public List<LoanApplicationResponse> getAll() {
         return loanApplicationService.getAll()
@@ -38,12 +47,18 @@ public class LoanApplicationController {
                 .toList();
     }
 
+    /**
+     * Approves a loan application if it is in review state.
+     */
     @PostMapping("/{id}/approve")
     public LoanApplicationResponse approveLoanApplication(@PathVariable Long id) {
         LoanApplication approved = loanApplicationService.approveApplication(id);
         return loanApplicationMapper.toResponse(approved);
     }
 
+    /**
+     * Rejects a loan application with a given reason.
+     */
     @PostMapping("/{id}/reject")
     public LoanApplicationResponse rejectLoanApplication(@PathVariable Long id,
                                                          @Valid @RequestBody RejectLoanRequest request) {
